@@ -1,32 +1,10 @@
 package xizz.runtracker;
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.app.Fragment;
 
-
-public class RunActivity extends Activity {
+public class RunActivity extends SingleFragmentActivity {
 
 	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_run);
-	}
+	protected Fragment createFragment() { return new RunFragment(); }
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.menu_run, menu);
-		return true;
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		int id = item.getItemId();
-
-		if (id == R.id.action_settings)
-			return true;
-
-		return super.onOptionsItemSelected(item);
-	}
 }
