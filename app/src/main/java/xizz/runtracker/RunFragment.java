@@ -30,6 +30,14 @@ public class RunFragment extends Fragment {
 
 	private BroadcastReceiver mLocationReceiver = new MyLocationReceiver();
 
+	public static RunFragment newInstance(long runId) {
+		Bundle args = new Bundle();
+		args.putLong(ARG_RUN_ID, runId);
+		RunFragment rf = new RunFragment();
+		rf.setArguments(args);
+		return rf;
+	}
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -94,14 +102,6 @@ public class RunFragment extends Fragment {
 	public void onStop() {
 		getActivity().unregisterReceiver(mLocationReceiver);
 		super.onStop();
-	}
-
-	public static RunFragment newInstance(long runId) {
-		Bundle args = new Bundle();
-		args.putLong(ARG_RUN_ID, runId);
-		RunFragment rf = new RunFragment();
-		rf.setArguments(args);
-		return rf;
 	}
 
 	private void updateUI() {

@@ -6,8 +6,7 @@ public class Run {
 	public long id;
 	public Date startDate;
 
-	public Run()
-	{
+	public Run() {
 		id = -1;
 		startDate = new Date();
 	}

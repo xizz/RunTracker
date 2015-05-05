@@ -13,5 +13,5 @@ public class RunActivity extends SingleFragmentActivity {
 			return RunFragment.newInstance(runId);
 		else
 			return new RunFragment();
-		}
+	}
 }

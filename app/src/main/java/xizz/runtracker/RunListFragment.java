@@ -44,7 +44,7 @@ public class RunListFragment extends ListFragment {
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		switch(item.getItemId()) {
+		switch (item.getItemId()) {
 			case R.id.menu_item_new_run:
 				Intent i = new Intent(getActivity(), RunActivity.class);
 				startActivityForResult(i, REQUEST_NEW_RUN);
@@ -58,7 +58,7 @@ public class RunListFragment extends ListFragment {
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (REQUEST_NEW_RUN == requestCode) {
 			mCursor.requery();
-			((RunCursorAdapter)getListAdapter()).notifyDataSetChanged();
+			((RunCursorAdapter) getListAdapter()).notifyDataSetChanged();
 		}
 	}
 
