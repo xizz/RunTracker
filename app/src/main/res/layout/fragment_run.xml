@@ -111,4 +111,12 @@
 			android:text="@string/stop"
 			/>
 	</LinearLayout>
+
+	<TextView
+		android:id="@+id/run_recordsTextView"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:layout_column="6"
+		android:text="No Record"/>
+
 </TableLayout>

@@ -15,6 +15,9 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Date;
+import java.util.List;
+
 public class RunFragment extends Fragment {
 	private static final String TAG = "RunFragment";
 	private static final String ARG_RUN_ID = "RUN_ID";
@@ -26,7 +29,7 @@ public class RunFragment extends Fragment {
 
 	private Button mStartButton, mStopButton;
 	private TextView mStartedTextView, mLatitudeTextView,
-			mLongitudeTextView, mAltitudeTextView, mDurationTextView;
+			mLongitudeTextView, mAltitudeTextView, mDurationTextView, mRecordsTextView;
 
 	private BroadcastReceiver mLocationReceiver = new MyLocationReceiver();
 
@@ -64,6 +67,7 @@ public class RunFragment extends Fragment {
 		mLongitudeTextView = (TextView) view.findViewById(R.id.run_longitudeTextView);
 		mAltitudeTextView = (TextView) view.findViewById(R.id.run_altitudeTextView);
 		mDurationTextView = (TextView) view.findViewById(R.id.run_durationTextView);
+		mRecordsTextView = (TextView) view.findViewById(R.id.run_recordsTextView);
 
 		mStartButton = (Button) view.findViewById(R.id.run_startButton);
 		mStartButton.setOnClickListener(new View.OnClickListener() {
@@ -105,13 +109,19 @@ public class RunFragment extends Fragment {
 	}
 
 	private void updateUI() {
-		boolean started = mRunManager.isTrackingRun();
 		boolean trackingThisRun = mRunManager.isTrackingRun(mRun);
 
 		if (mRun == null)
 			return;
 
+		List<Location> locations = mRunManager.getAllLocationsForRun(mRun.id);
+		StringBuilder text = new StringBuilder();
+		for (Location l : locations) {
+			text.append(new Date(l.getTime()) + "\n" + l.getLatitude() + ", " + l.getLongitude() +
+					"\n");
+		}
 		mStartedTextView.setText(mRun.startDate.toString());
+		mRecordsTextView.setText(text);
 
 		int durationSeconds = 0;
 		if (mLastLocation != null) {
@@ -122,8 +132,8 @@ public class RunFragment extends Fragment {
 		}
 		mDurationTextView.setText(Run.formatDuration(durationSeconds));
 
-		mStartButton.setEnabled(!started);
-		mStopButton.setEnabled(started && trackingThisRun);
+		mStartButton.setEnabled(!trackingThisRun);
+		mStopButton.setEnabled(trackingThisRun);
 	}
 
 	private class MyLocationReceiver extends BroadcastReceiver {

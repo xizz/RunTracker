@@ -33,6 +33,7 @@ public class RunListFragment extends ListFragment {
 	@Override
 	public void onResume() {
 		super.onResume();
+		mCursor.requery();
 		((RunCursorAdapter) getListAdapter()).notifyDataSetChanged();
 	}
 

@@ -8,6 +8,9 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.util.Log;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class RunManager {
 	public static final String ACTION_LOCATION = "xizz.runtracker.ACTION_LOCATION";
 
@@ -114,12 +117,26 @@ public class RunManager {
 		return location;
 	}
 
+
+	public List<Location> getAllLocationsForRun(long runId) {
+		List<Location> locations = new LinkedList<>();
+		RunDatabaseHelper.LocationCursor cursor = mHelper.queryAllLocationsForRun(runId);
+		cursor.moveToFirst();
+		while (!cursor.isAfterLast()) {
+			locations.add(cursor.getLocation());
+			cursor.moveToNext();
+		}
+		cursor.close();
+		return locations;
+	}
+
 	public RunDatabaseHelper.RunCursor queryRuns() {
 		return mHelper.queryRuns();
 	}
 
 	private PendingIntent getLocationPendingIntent(boolean shouldCreate) {
 		Intent broadcast = new Intent(ACTION_LOCATION);
+		broadcast.putExtra(RunActivity.EXTRA_RUN_ID, mCurrentRunId);
 		int flags = shouldCreate ? 0 : PendingIntent.FLAG_NO_CREATE;
 		return PendingIntent.getBroadcast(mAppContext, 0, broadcast, flags);
 	}
@@ -127,6 +144,7 @@ public class RunManager {
 	private void broadcastLocation(Location location) {
 		Intent broadcast = new Intent(ACTION_LOCATION);
 		broadcast.putExtra(LocationManager.KEY_LOCATION_CHANGED, location);
+		broadcast.putExtra(RunActivity.EXTRA_RUN_ID, mCurrentRunId);
 		mAppContext.sendBroadcast(broadcast);
 	}
 
