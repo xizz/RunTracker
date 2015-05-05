@@ -4,6 +4,7 @@ import android.app.ListFragment;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -16,7 +17,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 public class RunListFragment extends ListFragment {
-	private static final int REQUEST_NEW_RUN = 0;
 
 	private RunDatabaseHelper.RunCursor mCursor;
 
@@ -28,6 +28,12 @@ public class RunListFragment extends ListFragment {
 
 		RunCursorAdapter adapter = new RunCursorAdapter(getActivity(), mCursor);
 		setListAdapter(adapter);
+	}
+
+	@Override
+	public void onResume() {
+		super.onResume();
+		((RunCursorAdapter) getListAdapter()).notifyDataSetChanged();
 	}
 
 	@Override
@@ -47,18 +53,10 @@ public class RunListFragment extends ListFragment {
 		switch (item.getItemId()) {
 			case R.id.menu_item_new_run:
 				Intent i = new Intent(getActivity(), RunActivity.class);
-				startActivityForResult(i, REQUEST_NEW_RUN);
+				startActivity(i);
 				return true;
 			default:
 				return super.onOptionsItemSelected(item);
-		}
-	}
-
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		if (REQUEST_NEW_RUN == requestCode) {
-			mCursor.requery();
-			((RunCursorAdapter) getListAdapter()).notifyDataSetChanged();
 		}
 	}
 
@@ -72,10 +70,12 @@ public class RunListFragment extends ListFragment {
 	private static class RunCursorAdapter extends CursorAdapter {
 
 		private RunDatabaseHelper.RunCursor mRunCursor;
+		private Context mContext;
 
 		public RunCursorAdapter(Context context, RunDatabaseHelper.RunCursor cursor) {
 			super(context, cursor, 0);
 			mRunCursor = cursor;
+			mContext = context;
 		}
 
 		@Override
@@ -91,6 +91,10 @@ public class RunListFragment extends ListFragment {
 			TextView startDateTextView = (TextView) view;
 			String cellText = context.getString(R.string.cell_text, run.startDate);
 			startDateTextView.setText(cellText);
+			if (RunManager.get(mContext).isTrackingRun(run))
+				startDateTextView.setTextColor(Color.RED);
+			else
+				startDateTextView.setTextColor(Color.BLACK);
 		}
 	}
 }
