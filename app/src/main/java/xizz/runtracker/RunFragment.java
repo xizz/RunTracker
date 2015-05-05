@@ -3,8 +3,10 @@ package xizz.runtracker;
 import android.app.Fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,6 +17,7 @@ import android.widget.Toast;
 
 public class RunFragment extends Fragment {
 	private static final String TAG = "RunFragment";
+	private static final String ARG_RUN_ID = "RUN_ID";
 
 	private RunManager mRunManager;
 
@@ -25,29 +28,22 @@ public class RunFragment extends Fragment {
 	private TextView mStartedTextView, mLatitudeTextView,
 			mLongitudeTextView, mAltitudeTextView, mDurationTextView;
 
-	private BroadcastReceiver mLocationReceiver = new LocationReceiver() {
-
-		@Override
-		protected void onLocationReceived(Context context, Location loc) {
-			mLastLocation = loc;
-			if (isVisible())
-				updateUI();
-		}
-
-		@Override
-		protected void onProviderEnabledChanged(boolean enabled) {
-			int toastText = enabled ? R.string.gps_enabled : R.string.gps_disabled;
-			Toast.makeText(getActivity(), toastText, Toast.LENGTH_LONG).show();
-		}
-
-	};
-
+	private BroadcastReceiver mLocationReceiver = new MyLocationReceiver();
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setRetainInstance(true);
 		mRunManager = RunManager.get(getActivity());
+
+		Bundle args = getArguments();
+		if (args != null) {
+			long runId = args.getLong(ARG_RUN_ID, -1);
+			if (runId != -1) {
+				mRun = mRunManager.getRun(runId);
+				mLastLocation = mRunManager.getLastLocationForRun(runId);
+			}
+		}
 	}
 
 	@Override
@@ -65,8 +61,10 @@ public class RunFragment extends Fragment {
 		mStartButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				mRunManager.startLocationUpdates();
-				mRun = new Run();
+				if (mRun == null)
+					mRun = mRunManager.startNewRun();
+				else
+					mRunManager.startTrackingRun(mRun);
 				updateUI();
 			}
 		});
@@ -75,7 +73,7 @@ public class RunFragment extends Fragment {
 		mStopButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				mRunManager.stopLocationUpdates();
+				mRunManager.stopRun();
 				updateUI();
 			}
 		});
@@ -98,8 +96,17 @@ public class RunFragment extends Fragment {
 		super.onStop();
 	}
 
+	public static RunFragment newInstance(long runId) {
+		Bundle args = new Bundle();
+		args.putLong(ARG_RUN_ID, runId);
+		RunFragment rf = new RunFragment();
+		rf.setArguments(args);
+		return rf;
+	}
+
 	private void updateUI() {
 		boolean started = mRunManager.isTrackingRun();
+		boolean trackingThisRun = mRunManager.isTrackingRun(mRun);
 
 		if (mRun == null)
 			return;
@@ -116,21 +123,23 @@ public class RunFragment extends Fragment {
 		mDurationTextView.setText(Run.formatDuration(durationSeconds));
 
 		mStartButton.setEnabled(!started);
-		mStopButton.setEnabled(started);
+		mStopButton.setEnabled(started && trackingThisRun);
 	}
 
-	private class LocationReceiver extends xizz.runtracker.LocationReceiver {
+	private class MyLocationReceiver extends BroadcastReceiver {
 		@Override
-		protected void onLocationReceived(Context context, Location loc) {
-			mLastLocation = loc;
-			if (isVisible())
-				updateUI();
-		}
-
-		@Override
-		protected void onProviderEnabledChanged(boolean enabled) {
-			int toastText = enabled ? R.string.gps_enabled : R.string.gps_disabled;
-			Toast.makeText(getActivity(), toastText, Toast.LENGTH_LONG).show();
+		public void onReceive(Context context, Intent intent) {
+			Location loc = intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED);
+			if (loc != null && mRunManager.isTrackingRun(mRun)) {
+				mLastLocation = loc;
+				if (isVisible())
+					updateUI();
+			} else if (intent.hasExtra(LocationManager.KEY_PROVIDER_ENABLED)) {
+				boolean enabled = intent.getBooleanExtra(LocationManager.KEY_PROVIDER_ENABLED,
+						false);
+				int toastText = enabled ? R.string.gps_enabled : R.string.gps_disabled;
+				Toast.makeText(getActivity(), toastText, Toast.LENGTH_LONG).show();
+			}
 		}
 	}
 }

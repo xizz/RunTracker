@@ -14,8 +14,10 @@ public class LocationReceiver extends BroadcastReceiver {
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		Location loc = intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED);
-		if (loc != null)
+		if (loc != null) {
 			onLocationReceived(context, loc);
+			RunManager.get(context).insertLocation(loc);
+		}
 		else if (intent.hasExtra(LocationManager.KEY_PROVIDER_ENABLED)) {
 			boolean enabled = intent.getBooleanExtra(LocationManager.KEY_PROVIDER_ENABLED, false);
 			onProviderEnabledChanged(enabled);
