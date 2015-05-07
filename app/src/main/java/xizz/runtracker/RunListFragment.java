@@ -1,11 +1,14 @@
 package xizz.runtracker;
 
 import android.app.ListFragment;
+import android.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -16,31 +19,21 @@ import android.widget.CursorAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class RunListFragment extends ListFragment {
-
-	private RunDatabaseHelper.RunCursor mCursor;
+public class RunListFragment extends ListFragment implements LoaderManager.LoaderCallbacks<Cursor> {
+	private static final String TAG = "RunListFragment";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		Log.d(TAG, "onCreate()");
 		super.onCreate(savedInstanceState);
 		setHasOptionsMenu(true);
-		mCursor = RunManager.get(getActivity()).queryRuns();
-
-		RunCursorAdapter adapter = new RunCursorAdapter(getActivity(), mCursor);
-		setListAdapter(adapter);
+		getLoaderManager().initLoader(0, null, this);
 	}
 
 	@Override
 	public void onResume() {
 		super.onResume();
-		mCursor.requery();
-		((RunCursorAdapter) getListAdapter()).notifyDataSetChanged();
-	}
-
-	@Override
-	public void onDestroy() {
-		mCursor.close();
-		super.onDestroy();
+		getLoaderManager().restartLoader(0, null, this);
 	}
 
 	@Override
@@ -66,6 +59,23 @@ public class RunListFragment extends ListFragment {
 		Intent i = new Intent(getActivity(), RunActivity.class);
 		i.putExtra(RunActivity.EXTRA_RUN_ID, id);
 		startActivity(i);
+	}
+
+	@Override
+	public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+		return new RunListCursorLoader(getActivity());
+	}
+
+	@Override
+	public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+		RunCursorAdapter adapter =
+				new RunCursorAdapter(getActivity(), (RunDatabaseHelper.RunCursor) data);
+		setListAdapter(adapter);
+	}
+
+	@Override
+	public void onLoaderReset(Loader<Cursor> loader) {
+		setListAdapter(null);
 	}
 
 	private static class RunCursorAdapter extends CursorAdapter {

@@ -1,10 +1,12 @@
 package xizz.runtracker;
 
 import android.app.Fragment;
+import android.app.LoaderManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.Loader;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -21,6 +23,8 @@ import java.util.List;
 public class RunFragment extends Fragment {
 	private static final String TAG = "RunFragment";
 	private static final String ARG_RUN_ID = "RUN_ID";
+	private static final int LOAD_RUN = 0;
+	private static final int LOAD_LOCATION = 1;
 
 	private RunManager mRunManager;
 
@@ -51,8 +55,9 @@ public class RunFragment extends Fragment {
 		if (args != null) {
 			long runId = args.getLong(ARG_RUN_ID, -1);
 			if (runId != -1) {
-				mRun = mRunManager.getRun(runId);
-				mLastLocation = mRunManager.getLastLocationForRun(runId);
+				LoaderManager loaderManager = getLoaderManager();
+				loaderManager.initLoader(LOAD_RUN, args, new RunLoaderCallbacks());
+				loaderManager.initLoader(LOAD_LOCATION, args, new LocationLoaderCallbacks());
 			}
 		}
 	}
@@ -117,8 +122,12 @@ public class RunFragment extends Fragment {
 		List<Location> locations = mRunManager.getAllLocationsForRun(mRun.id);
 		StringBuilder text = new StringBuilder();
 		for (Location l : locations) {
-			text.append(new Date(l.getTime()) + "\n" + l.getLatitude() + ", " + l.getLongitude() +
-					"\n");
+			text.append(new Date(l.getTime()));
+			text.append("\n");
+			text.append(l.getLatitude());
+			text.append(", ");
+			text.append(l.getLongitude());
+			text.append("\n");
 		}
 		mStartedTextView.setText(mRun.startDate.toString());
 		mRecordsTextView.setText(text);
@@ -151,5 +160,37 @@ public class RunFragment extends Fragment {
 				Toast.makeText(getActivity(), toastText, Toast.LENGTH_LONG).show();
 			}
 		}
+	}
+
+	private class RunLoaderCallbacks implements LoaderManager.LoaderCallbacks<Run> {
+		@Override
+		public Loader<Run> onCreateLoader(int id, Bundle args) {
+			return new RunLoader(getActivity(), args.getLong(ARG_RUN_ID));
+		}
+
+		@Override
+		public void onLoadFinished(Loader<Run> loader, Run data) {
+			mRun = data;
+			updateUI();
+		}
+
+		@Override
+		public void onLoaderReset(Loader<Run> loader) { }
+	}
+
+	private class LocationLoaderCallbacks implements LoaderManager.LoaderCallbacks<Location> {
+		@Override
+		public Loader<Location> onCreateLoader(int id, Bundle args) {
+			return new LastLocationLoader(getActivity(), args.getLong(ARG_RUN_ID));
+		}
+
+		@Override
+		public void onLoadFinished(Loader<Location> loader, Location location) {
+			mLastLocation = location;
+			updateUI();
+		}
+
+		@Override
+		public void onLoaderReset(Loader<Location> loader) { }
 	}
 }
