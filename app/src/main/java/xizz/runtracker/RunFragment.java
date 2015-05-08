@@ -24,14 +24,11 @@ import java.util.List;
 public class RunFragment extends Fragment {
 	private static final String TAG = "RunFragment";
 	private static final String ARG_RUN_ID = "RUN_ID";
-	private static final int LOAD_RUN = 0;
-	private static final int LOAD_LOCATION = 1;
-	private static final int LOAD_LOCATIONS = 2;
+	private static final int LOAD_LOCATIONS = 1;
 
 	private RunManager mRunManager;
 
 	private Run mRun;
-	private Location mLastLocation;
 	private List<Location> mLocations;
 
 	private Button mStartButton, mStopButton;
@@ -58,9 +55,9 @@ public class RunFragment extends Fragment {
 		if (args != null) {
 			long runId = args.getLong(ARG_RUN_ID, -1);
 			if (runId != -1) {
+				Log.d(TAG, "initialize Loaders");
+				mRun = mRunManager.getRun(runId);
 				LoaderManager loaderManager = getLoaderManager();
-				loaderManager.initLoader(LOAD_RUN, args, new RunLoaderCallbacks());
-				loaderManager.initLoader(LOAD_LOCATION, args, new LocationLoaderCallbacks());
 				loaderManager.initLoader(LOAD_LOCATIONS, args, new LocationListLoaderCallbacks());
 			}
 		}
@@ -86,7 +83,7 @@ public class RunFragment extends Fragment {
 					mRun = mRunManager.startNewRun();
 				else
 					mRunManager.startTrackingRun(mRun);
-				updateUI();
+				updateButtonUI();
 			}
 		});
 
@@ -95,12 +92,11 @@ public class RunFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 				mRunManager.stopRun();
-				updateUI();
+				updateButtonUI();
 			}
 		});
 
-		updateUI();
-
+		updateButtonUI();
 		return view;
 	}
 
@@ -117,36 +113,35 @@ public class RunFragment extends Fragment {
 		super.onStop();
 	}
 
-	private void updateUI() {
+	private void updateButtonUI() {
 		boolean trackingThisRun = mRunManager.isTrackingRun(mRun);
-
-		if (mRun == null)
-			return;
-		if (mLocations != null) {
-			StringBuilder text = new StringBuilder();
-			for (Location l : mLocations) {
-				text.append(new Date(l.getTime()));
-				text.append("\n");
-				text.append(l.getLatitude());
-				text.append(", ");
-				text.append(l.getLongitude());
-				text.append("\n");
-			}
-			mStartedTextView.setText(mRun.startDate.toString());
-			mRecordsTextView.setText(text);
-		}
-
-		int durationSeconds = 0;
-		if (mLastLocation != null) {
-			durationSeconds = mRun.getDurationSeconds(mLastLocation.getTime());
-			mLatitudeTextView.setText(Double.toString(mLastLocation.getLatitude()));
-			mLongitudeTextView.setText(Double.toString(mLastLocation.getLongitude()));
-			mAltitudeTextView.setText(Double.toString(mLastLocation.getAltitude()));
-		}
-		mDurationTextView.setText(Run.formatDuration(durationSeconds));
-
 		mStartButton.setEnabled(!trackingThisRun);
 		mStopButton.setEnabled(trackingThisRun);
+	}
+
+	private void updateLocaitonUI() {
+		if (mRun == null || mLocations == null)
+			return;
+		StringBuilder text = new StringBuilder();
+		for (Location l : mLocations) {
+			text.append(new Date(l.getTime()));
+			text.append("\n");
+			text.append(l.getLatitude());
+			text.append(", ");
+			text.append(l.getLongitude());
+			text.append("\n");
+		}
+		mStartedTextView.setText(mRun.startDate.toString());
+		mRecordsTextView.setText(text);
+
+		int durationSeconds;
+		Location lastLocation = mLocations.get(0);
+
+		durationSeconds = mRun.getDurationSeconds(lastLocation.getTime());
+		mLatitudeTextView.setText(Double.toString(lastLocation.getLatitude()));
+		mLongitudeTextView.setText(Double.toString(lastLocation.getLongitude()));
+		mAltitudeTextView.setText(Double.toString(lastLocation.getAltitude()));
+		mDurationTextView.setText(Run.formatDuration(durationSeconds));
 	}
 
 	private class MyLocationReceiver extends BroadcastReceiver {
@@ -158,7 +153,7 @@ public class RunFragment extends Fragment {
 					args = new Bundle();
 				if (args.getLong(ARG_RUN_ID, -1) == -1)
 					args.putLong(ARG_RUN_ID, mRun.id);
-				Log.d(TAG, "loading loacations");
+				Log.d(TAG, "Restart Loader");
 				getLoaderManager().restartLoader(LOAD_LOCATIONS, args,
 						new LocationListLoaderCallbacks());
 			} else if (intent.hasExtra(LocationManager.KEY_PROVIDER_ENABLED)) {
@@ -168,38 +163,6 @@ public class RunFragment extends Fragment {
 				Toast.makeText(getActivity(), toastText, Toast.LENGTH_LONG).show();
 			}
 		}
-	}
-
-	private class RunLoaderCallbacks implements LoaderManager.LoaderCallbacks<Run> {
-		@Override
-		public Loader<Run> onCreateLoader(int id, Bundle args) {
-			return new RunLoader(getActivity(), args.getLong(ARG_RUN_ID));
-		}
-
-		@Override
-		public void onLoadFinished(Loader<Run> loader, Run data) {
-			mRun = data;
-			updateUI();
-		}
-
-		@Override
-		public void onLoaderReset(Loader<Run> loader) { }
-	}
-
-	private class LocationLoaderCallbacks implements LoaderManager.LoaderCallbacks<Location> {
-		@Override
-		public Loader<Location> onCreateLoader(int id, Bundle args) {
-			return new LastLocationLoader(getActivity(), args.getLong(ARG_RUN_ID));
-		}
-
-		@Override
-		public void onLoadFinished(Loader<Location> loader, Location location) {
-			mLastLocation = location;
-			updateUI();
-		}
-
-		@Override
-		public void onLoaderReset(Loader<Location> loader) { }
 	}
 
 	private class LocationListLoaderCallbacks
@@ -212,8 +175,7 @@ public class RunFragment extends Fragment {
 		@Override
 		public void onLoadFinished(Loader<List<Location>> loader, List<Location> locations) {
 			mLocations = locations;
-			mLastLocation = locations.get(0);
-			updateUI();
+			updateLocaitonUI();
 		}
 
 		@Override

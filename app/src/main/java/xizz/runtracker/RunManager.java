@@ -43,33 +43,6 @@ public class RunManager {
 		return sRunManager;
 	}
 
-	public void startLocationUpdates() {
-		String provider = LocationManager.GPS_PROVIDER;
-		if (mLocationManager.getProvider(TEST_PROVIDER) != null
-				&& mLocationManager.isProviderEnabled(TEST_PROVIDER))
-			provider = TEST_PROVIDER;
-
-		Log.d(TAG, "Using provider " + provider);
-
-		Location lastKnown = mLocationManager.getLastKnownLocation(provider);
-		if (lastKnown != null) {
-			lastKnown.setTime(System.currentTimeMillis());
-			broadcastLocation(lastKnown);
-		}
-		PendingIntent pi = getLocationPendingIntent(true);
-		mLocationManager.requestLocationUpdates(provider, 0, 0, pi);
-	}
-
-	public void stopLocationUpdates() {
-		PendingIntent pi = getLocationPendingIntent(false);
-		if (pi != null) {
-			mLocationManager.removeUpdates(pi);
-			pi.cancel();
-		}
-	}
-
-	public boolean isTrackingRun() { return getLocationPendingIntent(false) != null; }
-
 	public boolean isTrackingRun(Run run) { return run != null && run.id == mCurrentRunId; }
 
 	public Run startNewRun() {
@@ -107,17 +80,6 @@ public class RunManager {
 		return run;
 	}
 
-	public Location getLastLocationForRun(long runId) {
-		Location location = null;
-		RunDatabaseHelper.LocationCursor cursor = mHelper.queryLastLocationForRun(runId);
-		cursor.moveToFirst();
-		if (!cursor.isAfterLast())
-			location = cursor.getLocation();
-		cursor.close();
-		return location;
-	}
-
-
 	public List<Location> getAllLocationsForRun(long runId) {
 		List<Location> locations = new LinkedList<>();
 		RunDatabaseHelper.LocationCursor cursor = mHelper.queryAllLocationsForRun(runId);
@@ -132,6 +94,32 @@ public class RunManager {
 
 	public RunDatabaseHelper.RunCursor queryRuns() {
 		return mHelper.queryRuns();
+	}
+
+
+	private void startLocationUpdates() {
+		String provider = LocationManager.GPS_PROVIDER;
+		if (mLocationManager.getProvider(TEST_PROVIDER) != null
+				&& mLocationManager.isProviderEnabled(TEST_PROVIDER))
+			provider = TEST_PROVIDER;
+
+		Log.d(TAG, "Using provider " + provider);
+
+		Location lastKnown = mLocationManager.getLastKnownLocation(provider);
+		if (lastKnown != null) {
+			lastKnown.setTime(System.currentTimeMillis());
+			broadcastLocation(lastKnown);
+		}
+		PendingIntent pi = getLocationPendingIntent(true);
+		mLocationManager.requestLocationUpdates(provider, 0, 0, pi);
+	}
+
+	private void stopLocationUpdates() {
+		PendingIntent pi = getLocationPendingIntent(false);
+		if (pi != null) {
+			mLocationManager.removeUpdates(pi);
+			pi.cancel();
+		}
 	}
 
 	private PendingIntent getLocationPendingIntent(boolean shouldCreate) {
