@@ -13,8 +13,10 @@ import android.util.Log;
 import java.util.Date;
 
 public class LocationReceiver extends BroadcastReceiver {
+	public static final String ACTION_LOCATION_SAVED = "xizz.runtracker.ACTION_LOCATION_SAVED";
 
 	private static final String TAG = "LocationReceiver";
+
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		Location loc = intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED);
@@ -22,6 +24,7 @@ public class LocationReceiver extends BroadcastReceiver {
 			onLocationReceived(context, loc);
 			loc.setTime(new Date().getTime());
 			RunManager.get(context).insertLocation(loc);
+			Log.d(TAG, "location saved");
 			Intent i = new Intent(context, RunActivity.class);
 			i.putExtra(RunActivity.EXTRA_RUN_ID, intent.getLongExtra(RunActivity.EXTRA_RUN_ID,
 					-1));
@@ -36,6 +39,7 @@ public class LocationReceiver extends BroadcastReceiver {
 			NotificationManager notificationManager =
 					(NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 			notificationManager.notify(0, builder.build());
+			broadcastLocation(context, intent.getLongExtra(RunActivity.EXTRA_RUN_ID, -1));
 		} else if (intent.hasExtra(LocationManager.KEY_PROVIDER_ENABLED)) {
 			boolean enabled = intent.getBooleanExtra(LocationManager.KEY_PROVIDER_ENABLED, false);
 			onProviderEnabledChanged(enabled);
@@ -51,4 +55,9 @@ public class LocationReceiver extends BroadcastReceiver {
 		Log.d(TAG, "Provider " + (enabled ? "enabled" : "disabled"));
 	}
 
+	private void broadcastLocation(Context context, long runId) {
+		Intent broadcast = new Intent(ACTION_LOCATION_SAVED);
+		broadcast.putExtra(RunActivity.EXTRA_RUN_ID, runId);
+		context.sendBroadcast(broadcast);
+	}
 }

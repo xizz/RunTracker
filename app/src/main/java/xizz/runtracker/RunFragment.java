@@ -10,6 +10,7 @@ import android.content.Loader;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -107,7 +108,7 @@ public class RunFragment extends Fragment {
 	public void onStart() {
 		super.onStart();
 		getActivity().registerReceiver(mLocationReceiver,
-				new IntentFilter(RunManager.ACTION_LOCATION));
+				new IntentFilter(LocationReceiver.ACTION_LOCATION_SAVED));
 	}
 
 	@Override
@@ -151,14 +152,13 @@ public class RunFragment extends Fragment {
 	private class MyLocationReceiver extends BroadcastReceiver {
 		@Override
 		public void onReceive(Context context, Intent intent) {
-			Location loc = intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED);
-			if (loc != null && mRunManager.isTrackingRun(mRun)) {
-				mLastLocation = loc;
+			if (mRunManager.isTrackingRun(mRun)) {
 				Bundle args = getArguments();
 				if (args == null)
 					args = new Bundle();
 				if (args.getLong(ARG_RUN_ID, -1) == -1)
 					args.putLong(ARG_RUN_ID, mRun.id);
+				Log.d(TAG, "loading loacations");
 				getLoaderManager().restartLoader(LOAD_LOCATIONS, args,
 						new LocationListLoaderCallbacks());
 			} else if (intent.hasExtra(LocationManager.KEY_PROVIDER_ENABLED)) {
@@ -210,8 +210,9 @@ public class RunFragment extends Fragment {
 		}
 
 		@Override
-		public void onLoadFinished(Loader<List<Location>> loader, List<Location> data) {
-			mLocations = data;
+		public void onLoadFinished(Loader<List<Location>> loader, List<Location> locations) {
+			mLocations = locations;
+			mLastLocation = locations.get(0);
 			updateUI();
 		}
 
