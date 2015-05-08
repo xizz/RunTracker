@@ -25,11 +25,13 @@ public class RunFragment extends Fragment {
 	private static final String ARG_RUN_ID = "RUN_ID";
 	private static final int LOAD_RUN = 0;
 	private static final int LOAD_LOCATION = 1;
+	private static final int LOAD_LOCATIONS = 2;
 
 	private RunManager mRunManager;
 
 	private Run mRun;
 	private Location mLastLocation;
+	private List<Location> mLocations;
 
 	private Button mStartButton, mStopButton;
 	private TextView mStartedTextView, mLatitudeTextView,
@@ -58,6 +60,7 @@ public class RunFragment extends Fragment {
 				LoaderManager loaderManager = getLoaderManager();
 				loaderManager.initLoader(LOAD_RUN, args, new RunLoaderCallbacks());
 				loaderManager.initLoader(LOAD_LOCATION, args, new LocationLoaderCallbacks());
+				loaderManager.initLoader(LOAD_LOCATIONS, args, new LocationListLoaderCallbacks());
 			}
 		}
 	}
@@ -118,19 +121,19 @@ public class RunFragment extends Fragment {
 
 		if (mRun == null)
 			return;
-
-		List<Location> locations = mRunManager.getAllLocationsForRun(mRun.id);
-		StringBuilder text = new StringBuilder();
-		for (Location l : locations) {
-			text.append(new Date(l.getTime()));
-			text.append("\n");
-			text.append(l.getLatitude());
-			text.append(", ");
-			text.append(l.getLongitude());
-			text.append("\n");
+		if (mLocations != null) {
+			StringBuilder text = new StringBuilder();
+			for (Location l : mLocations) {
+				text.append(new Date(l.getTime()));
+				text.append("\n");
+				text.append(l.getLatitude());
+				text.append(", ");
+				text.append(l.getLongitude());
+				text.append("\n");
+			}
+			mStartedTextView.setText(mRun.startDate.toString());
+			mRecordsTextView.setText(text);
 		}
-		mStartedTextView.setText(mRun.startDate.toString());
-		mRecordsTextView.setText(text);
 
 		int durationSeconds = 0;
 		if (mLastLocation != null) {
@@ -151,8 +154,13 @@ public class RunFragment extends Fragment {
 			Location loc = intent.getParcelableExtra(LocationManager.KEY_LOCATION_CHANGED);
 			if (loc != null && mRunManager.isTrackingRun(mRun)) {
 				mLastLocation = loc;
-				if (isVisible())
-					updateUI();
+				Bundle args = getArguments();
+				if (args == null)
+					args = new Bundle();
+				if (args.getLong(ARG_RUN_ID, -1) == -1)
+					args.putLong(ARG_RUN_ID, mRun.id);
+				getLoaderManager().restartLoader(LOAD_LOCATIONS, args,
+						new LocationListLoaderCallbacks());
 			} else if (intent.hasExtra(LocationManager.KEY_PROVIDER_ENABLED)) {
 				boolean enabled = intent.getBooleanExtra(LocationManager.KEY_PROVIDER_ENABLED,
 						false);
@@ -192,5 +200,22 @@ public class RunFragment extends Fragment {
 
 		@Override
 		public void onLoaderReset(Loader<Location> loader) { }
+	}
+
+	private class LocationListLoaderCallbacks
+			implements LoaderManager.LoaderCallbacks<List<Location>> {
+		@Override
+		public Loader<List<Location>> onCreateLoader(int id, Bundle args) {
+			return new LocationListLoader(getActivity(), args.getLong(ARG_RUN_ID));
+		}
+
+		@Override
+		public void onLoadFinished(Loader<List<Location>> loader, List<Location> data) {
+			mLocations = data;
+			updateUI();
+		}
+
+		@Override
+		public void onLoaderReset(Loader<List<Location>> loader) { }
 	}
 }
