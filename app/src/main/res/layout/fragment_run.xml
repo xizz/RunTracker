@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
              android:layout_width="fill_parent"
-             android:layout_height="wrap_content"
-	>
+             android:layout_height="wrap_content">
 
 	<TableRow>
 
@@ -11,14 +10,12 @@
 			android:layout_height="wrap_content"
 			android:gravity="right"
 			android:paddingRight="5sp"
-			android:text="@string/started"
-			/>
+			android:text="@string/started"/>
 
 		<TextView
 			android:id="@+id/run_startedTextView"
 			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			/>
+			android:layout_height="wrap_content"/>
 	</TableRow>
 
 	<TableRow>
@@ -28,14 +25,12 @@
 			android:layout_height="wrap_content"
 			android:gravity="right"
 			android:paddingRight="5sp"
-			android:text="@string/latitude"
-			/>
+			android:text="@string/latitude"/>
 
 		<TextView
 			android:id="@+id/run_latitudeTextView"
 			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			/>
+			android:layout_height="wrap_content"/>
 	</TableRow>
 
 	<TableRow>
@@ -45,14 +40,12 @@
 			android:layout_height="wrap_content"
 			android:gravity="right"
 			android:paddingRight="5sp"
-			android:text="@string/longitude"
-			/>
+			android:text="@string/longitude"/>
 
 		<TextView
 			android:id="@+id/run_longitudeTextView"
 			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			/>
+			android:layout_height="wrap_content"/>
 	</TableRow>
 
 	<TableRow>
@@ -62,14 +55,12 @@
 			android:layout_height="wrap_content"
 			android:gravity="right"
 			android:paddingRight="5sp"
-			android:text="@string/altitude"
-			/>
+			android:text="@string/altitude"/>
 
 		<TextView
 			android:id="@+id/run_altitudeTextView"
 			android:layout_width="fill_parent"
-			android:layout_height="wrap_content"
-			/>
+			android:layout_height="wrap_content"/>
 	</TableRow>
 
 	<TableRow>
@@ -79,37 +70,39 @@
 			android:layout_height="wrap_content"
 			android:gravity="right"
 			android:paddingRight="5sp"
-			android:text="@string/elapsed_time"
-			/>
+			android:text="@string/elapsed_time"/>
 
 		<TextView
 			android:id="@+id/run_durationTextView"
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
-			android:textSize="25sp"
-			/>
+			android:textSize="25sp"/>
 	</TableRow>
 
 	<LinearLayout
 		android:layout_height="wrap_content"
-		android:orientation="horizontal"
-		>
+		android:orientation="horizontal">
 
 		<Button
 			android:id="@+id/run_startButton"
 			android:layout_width="0dp"
 			android:layout_height="wrap_content"
 			android:layout_weight="1"
-			android:text="@string/start"
-			/>
+			android:text="@string/start"/>
 
 		<Button
 			android:id="@+id/run_stopButton"
 			android:layout_width="0dp"
 			android:layout_height="wrap_content"
 			android:layout_weight="1"
-			android:text="@string/stop"
-			/>
+			android:text="@string/stop"/>
+
+		<Button
+			android:id="@+id/run_mapButton"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:text="@string/map"/>
 	</LinearLayout>
 
 	<TextView

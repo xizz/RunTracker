@@ -21,7 +21,7 @@ import android.widget.Toast;
 import java.util.Date;
 import java.util.List;
 
-public class RunFragment extends Fragment {
+public class RunFragment extends Fragment implements LoaderManager.LoaderCallbacks<List<Location>> {
 	private static final String TAG = "RunFragment";
 	private static final String ARG_RUN_ID = "RUN_ID";
 	private static final int LOAD_LOCATIONS = 1;
@@ -31,7 +31,7 @@ public class RunFragment extends Fragment {
 	private Run mRun;
 	private List<Location> mLocations;
 
-	private Button mStartButton, mStopButton;
+	private Button mStartButton, mStopButton, mMapButton;
 	private TextView mStartedTextView, mLatitudeTextView,
 			mLongitudeTextView, mAltitudeTextView, mDurationTextView, mRecordsTextView;
 
@@ -58,7 +58,7 @@ public class RunFragment extends Fragment {
 				Log.d(TAG, "initialize Loaders");
 				mRun = mRunManager.getRun(runId);
 				LoaderManager loaderManager = getLoaderManager();
-				loaderManager.initLoader(LOAD_LOCATIONS, args, new LocationListLoaderCallbacks());
+				loaderManager.initLoader(LOAD_LOCATIONS, args, this);
 			}
 		}
 	}
@@ -96,6 +96,16 @@ public class RunFragment extends Fragment {
 			}
 		});
 
+		mMapButton = (Button) view.findViewById(R.id.run_mapButton);
+		mMapButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent i = new Intent(getActivity(), RunMapActivity.class);
+				i.putExtra(RunMapActivity.EXTRA_RUN_ID, mRun.id);
+				startActivity(i);
+			}
+		});
+
 		updateButtonUI();
 		return view;
 	}
@@ -113,10 +123,26 @@ public class RunFragment extends Fragment {
 		super.onStop();
 	}
 
+	@Override
+	public Loader<List<Location>> onCreateLoader(int id, Bundle args) {
+		return new LocationListLoader(getActivity(), args.getLong(ARG_RUN_ID));
+	}
+
+	@Override
+	public void onLoadFinished(Loader<List<Location>> loader, List<Location> locations) {
+		mLocations = locations;
+		updateButtonUI();
+		updateLocaitonUI();
+	}
+
+	@Override
+	public void onLoaderReset(Loader<List<Location>> loader) { }
+
 	private void updateButtonUI() {
 		boolean trackingThisRun = mRunManager.isTrackingRun(mRun);
 		mStartButton.setEnabled(!trackingThisRun);
 		mStopButton.setEnabled(trackingThisRun);
+		mMapButton.setEnabled(mLocations != null && mLocations.size() > 0);
 	}
 
 	private void updateLocaitonUI() {
@@ -154,8 +180,7 @@ public class RunFragment extends Fragment {
 				if (args.getLong(ARG_RUN_ID, -1) == -1)
 					args.putLong(ARG_RUN_ID, mRun.id);
 				Log.d(TAG, "Restart Loader");
-				getLoaderManager().restartLoader(LOAD_LOCATIONS, args,
-						new LocationListLoaderCallbacks());
+				getLoaderManager().restartLoader(LOAD_LOCATIONS, args, RunFragment.this);
 			} else if (intent.hasExtra(LocationManager.KEY_PROVIDER_ENABLED)) {
 				boolean enabled = intent.getBooleanExtra(LocationManager.KEY_PROVIDER_ENABLED,
 						false);
@@ -163,22 +188,5 @@ public class RunFragment extends Fragment {
 				Toast.makeText(getActivity(), toastText, Toast.LENGTH_LONG).show();
 			}
 		}
-	}
-
-	private class LocationListLoaderCallbacks
-			implements LoaderManager.LoaderCallbacks<List<Location>> {
-		@Override
-		public Loader<List<Location>> onCreateLoader(int id, Bundle args) {
-			return new LocationListLoader(getActivity(), args.getLong(ARG_RUN_ID));
-		}
-
-		@Override
-		public void onLoadFinished(Loader<List<Location>> loader, List<Location> locations) {
-			mLocations = locations;
-			updateLocaitonUI();
-		}
-
-		@Override
-		public void onLoaderReset(Loader<List<Location>> loader) { }
 	}
 }
