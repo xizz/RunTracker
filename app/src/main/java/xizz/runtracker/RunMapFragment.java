@@ -1,6 +1,10 @@
 package xizz.runtracker;
 
 import android.app.LoaderManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.Loader;
 import android.content.res.Resources;
 import android.graphics.Point;
@@ -27,8 +31,10 @@ public class RunMapFragment extends MapFragment
 	private static final String TAG = "RunMapFragment";
 	private static final String ARG_RUN_ID = "RUN_ID";
 	private static final int LOAD_LOCATIONS = 0;
-	List<Location> mLocations;
+
+	private List<Location> mLocations;
 	private GoogleMap mGoogleMap;
+	private BroadcastReceiver mLocationReceiver = new MyLocationReceiver();
 
 	public static RunMapFragment newInstance(long runId) {
 		Bundle args = new Bundle();
@@ -63,6 +69,19 @@ public class RunMapFragment extends MapFragment
 	}
 
 	@Override
+	public void onStart() {
+		super.onStart();
+		getActivity().registerReceiver(mLocationReceiver,
+				new IntentFilter(LocationReceiver.ACTION_LOCATION_SAVED));
+	}
+
+	@Override
+	public void onStop() {
+		getActivity().unregisterReceiver(mLocationReceiver);
+		super.onStop();
+	}
+
+	@Override
 	public Loader<List<Location>> onCreateLoader(int id, Bundle args) {
 		return new LocationListLoader(getActivity(), args.getLong(ARG_RUN_ID, -1));
 	}
@@ -79,6 +98,8 @@ public class RunMapFragment extends MapFragment
 	private void updateUI() {
 		if (mGoogleMap == null || mLocations == null)
 			return;
+
+		mGoogleMap.clear();
 
 		PolylineOptions line = new PolylineOptions();
 		LatLngBounds.Builder latLngBuilder = new LatLngBounds.Builder();
@@ -112,5 +133,19 @@ public class RunMapFragment extends MapFragment
 		CameraUpdate movement = CameraUpdateFactory.newLatLngBounds(latLngBounds,
 				size.x, size.y, 15);
 		mGoogleMap.moveCamera(movement);
+	}
+
+	private class MyLocationReceiver extends BroadcastReceiver {
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			Bundle myArgs = getArguments();
+			if (myArgs != null) {
+				long runId = myArgs.getLong(ARG_RUN_ID, -1);
+				if (runId != -1 && runId == intent.getLongExtra(RunActivity.EXTRA_RUN_ID, -1)) {
+					LoaderManager loaderManager = getLoaderManager();
+					loaderManager.restartLoader(LOAD_LOCATIONS, myArgs, RunMapFragment.this);
+				}
+			}
+		}
 	}
 }
