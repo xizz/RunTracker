@@ -47,7 +47,7 @@ public class RunMapFragment extends MapFragment
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
+		setRetainInstance(true);
 		Bundle args = getArguments();
 		if (args != null) {
 			long runId = args.getLong(ARG_RUN_ID, -1);

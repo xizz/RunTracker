@@ -64,6 +64,13 @@ public class RunFragment extends Fragment implements LoaderManager.LoaderCallbac
 	}
 
 	@Override
+	public void onResume() {
+		super.onResume();
+		updateButtonUI();
+		updateLocaitonUI();
+	}
+
+	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 	                         Bundle savedInstanceState) {
 		View view = inflater.inflate(R.layout.fragment_run, container, false);
