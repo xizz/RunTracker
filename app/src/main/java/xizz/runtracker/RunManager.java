@@ -67,7 +67,7 @@ public class RunManager {
 		if (mCurrentRunId != -1)
 			mHelper.insertLocation(mCurrentRunId, location);
 		else
-			Log.e(TAG, "Location recevied with no tracking run; ignoring.");
+			Log.e(TAG, "Location received with no tracking run; ignoring.");
 	}
 
 	public Run getRun(long id) {
@@ -110,8 +110,8 @@ public class RunManager {
 			lastKnown.setTime(System.currentTimeMillis());
 			broadcastLocation(lastKnown);
 		}
-		PendingIntent pi = getLocationPendingIntent(true);
-		mLocationManager.requestLocationUpdates(provider, 0, 0, pi);
+		PendingIntent pendingIntent = getLocationPendingIntent(true);
+		mLocationManager.requestLocationUpdates(provider, 0, 0, pendingIntent);
 	}
 
 	private void stopLocationUpdates() {
