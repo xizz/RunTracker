@@ -19,9 +19,9 @@ public class RunManager {
 	private static final String PREF_CURRENT_RUN_ID = "RunManager.currentRunId";
 
 	private static RunManager sRunManager;
+
 	private Context mAppContext;
 	private LocationManager mLocationManager;
-
 	private RunDatabaseHelper mHelper;
 	private SharedPreferences mPrefs;
 	private long mCurrentRunId;
