@@ -15,8 +15,6 @@ public class RunManager {
 	public static final String ACTION_LOCATION = "xizz.runtracker.ACTION_LOCATION";
 
 	private static final String TAG = "RunManager";
-	private static final String TEST_PROVIDER = "TEST_PROVIDER";
-
 	private static final String PREFS_FILE = "runs";
 	private static final String PREF_CURRENT_RUN_ID = "RunManager.currentRunId";
 
@@ -99,11 +97,6 @@ public class RunManager {
 
 	private void startLocationUpdates() {
 		String provider = LocationManager.GPS_PROVIDER;
-		if (mLocationManager.getProvider(TEST_PROVIDER) != null
-				&& mLocationManager.isProviderEnabled(TEST_PROVIDER))
-			provider = TEST_PROVIDER;
-
-		Log.d(TAG, "Using provider " + provider);
 
 		Location lastKnown = mLocationManager.getLastKnownLocation(provider);
 		if (lastKnown != null) {
