@@ -1,11 +1,14 @@
 package xizz.runtracker;
 
+import android.Manifest;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
 
 import java.util.LinkedList;
@@ -28,8 +31,7 @@ public class RunManager {
 
 	private RunManager(Context appContext) {
 		mAppContext = appContext;
-		mLocationManager = (LocationManager) mAppContext.getSystemService(Context
-				.LOCATION_SERVICE);
+		mLocationManager = (LocationManager) mAppContext.getSystemService(Context.LOCATION_SERVICE);
 		mHelper = new RunDatabaseHelper(mAppContext);
 		mPrefs = mAppContext.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE);
 		mCurrentRunId = mPrefs.getLong(PREF_CURRENT_RUN_ID, -1);
@@ -98,6 +100,17 @@ public class RunManager {
 	private void startLocationUpdates() {
 		String provider = LocationManager.GPS_PROVIDER;
 
+		if (ActivityCompat.checkSelfPermission(mAppContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+			ActivityCompat.checkSelfPermission(mAppContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+			// TODO: Consider calling
+			//    ActivityCompat#requestPermissions
+			// here to request the missing permissions, and then overriding
+			//   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+			//                                          int[] grantResults)
+			// to handle the case where the user grants the permission. See the documentation
+			// for ActivityCompat#requestPermissions for more details.
+			return;
+		}
 		Location lastKnown = mLocationManager.getLastKnownLocation(provider);
 		if (lastKnown != null) {
 			lastKnown.setTime(System.currentTimeMillis());
