@@ -10,14 +10,12 @@ import android.content.res.Resources;
 import android.graphics.Point;
 import android.location.Location;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -27,7 +25,7 @@ import java.util.Date;
 import java.util.List;
 
 public class RunMapFragment extends MapFragment
-		implements LoaderManager.LoaderCallbacks<List<Location>> {
+		implements OnMapReadyCallback, LoaderManager.LoaderCallbacks<List<Location>> {
 	private static final String TAG = "RunMapFragment";
 	private static final String ARG_RUN_ID = "RUN_ID";
 	private static final int LOAD_LOCATIONS = 0;
@@ -56,16 +54,7 @@ public class RunMapFragment extends MapFragment
 				loaderManager.initLoader(LOAD_LOCATIONS, args, this);
 			}
 		}
-	}
-
-	@Override
-	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle
-			savedInstanceState) {
-		View v = super.onCreateView(inflater, container, savedInstanceState);
-		mGoogleMap = getMap();
-		if (mGoogleMap != null)
-			mGoogleMap.setMyLocationEnabled(true);
-		return v;
+		getMapAsync(this);
 	}
 
 	@Override
@@ -79,6 +68,13 @@ public class RunMapFragment extends MapFragment
 	public void onStop() {
 		getActivity().unregisterReceiver(mLocationReceiver);
 		super.onStop();
+	}
+
+	@Override
+	public void onMapReady(GoogleMap googleMap) {
+		mGoogleMap = googleMap;
+		if (mGoogleMap != null)
+			mGoogleMap.setMyLocationEnabled(true);
 	}
 
 	@Override
